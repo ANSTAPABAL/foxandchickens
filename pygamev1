@@ -1,0 +1,95 @@
+// игра через пугейм
+```python
+import pygame
+import random
+
+pygame.init()
+
+WIDTH = 800
+HEIGHT = 600
+FPS = 60
+
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Лиса vs Курица")
+clock = pygame.time.Clock()
+
+fox_img = pygame.Surface((50, 50))
+fox_img.fill(RED)
+chicken_img = pygame.Surface((30, 30))
+chicken_img.fill(YELLOW)
+
+class Fox:
+    def __init__(self):
+        self.rect = fox_img.get_rect()
+        self.rect.center = (WIDTH//2, HEIGHT//2)
+        self.speed = 5
+    
+    def move(self, dx, dy):
+        self.rect.x += dx * self.speed
+        self.rect.y += dy * self.speed
+        self.rect.clamp_ip(screen.get_rect())
+    
+    def draw(self):
+        screen.blit(fox_img, self.rect)
+
+class Chicken:
+    def __init__(self):
+        self.rect = chicken_img.get_rect()
+        self.rect.center = (random.randint(0, WIDTH), random.randint(0, HEIGHT))
+        self.speed = 3
+        self.direction = pygame.math.Vector2(1, 0).rotate(random.randint(0, 360))
+    
+    def update(self):
+        if random.random() < 0.02:
+            self.direction = self.direction.rotate(random.randint(-45, 45))
+        
+        self.rect.center += self.direction * self.speed
+        if not screen.get_rect().contains(self.rect):
+            self.direction = self.direction.reflect(pygame.math.Vector2(
+                self.rect.centerx > WIDTH or self.rect.centerx < 0,
+                self.rect.centery > HEIGHT or self.rect.centery < 0
+            ))
+    
+    def draw(self):
+        screen.blit(chicken_img, self.rect)
+
+fox = Fox()
+chicken = Chicken()
+
+running = True
+game_over = False
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    if not game_over:
+        keys = pygame.key.get_pressed()
+        dx = keys[pygame.K_RIGHT] - keys[pygame.K_LEFT]
+        dy = keys[pygame.K_DOWN] - keys[pygame.K_UP]
+        fox.move(dx, dy)
+        
+        chicken.update()
+        
+        if fox.rect.colliderect(chicken.rect):
+            game_over = True
+    
+    screen.fill(WHITE)
+    fox.draw()
+    chicken.draw()
+    
+    if game_over:
+        font = pygame.font.Font(None, 74)
+        text = font.render('Лиса поймала курицу!', True, RED)
+        screen.blit(text, (WIDTH//2 - 250, HEIGHT//2 - 50))
+    
+    pygame.display.flip()
+    clock.tick(FPS)
+
+pygame.quit()
+```
